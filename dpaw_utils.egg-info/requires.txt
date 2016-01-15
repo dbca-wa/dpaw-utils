@@ -1,0 +1,10 @@
+django
+requests
+bottle
+django-confy
+ipython
+django-extensions
+gevent
+django-uwsgi
+django-redis
+psycopg2
