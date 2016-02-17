@@ -1,3 +1,4 @@
-.hg*
-dist/
+*.swp
 *.pyc
+dist/
+dpaw_utils.egg-info/

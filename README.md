@@ -1,8 +1,9 @@
 # README #
 
-A couple of python and django utilities
+A bundle of several Python and Django utilities used by many department
+applications.
 
-As a convenience function ulls in requirements for django, bottle, uwsgi, redis and psycopg2 (postgresql) projects used by a lot of department apps.
+As a convenience function use in requirements for django, bottle, uwsgi, redis and psycopg2 (postgresql) projects.
 
 Future plans:
 
