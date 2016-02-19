@@ -27,3 +27,19 @@ MIDDLEWARE_CLASSES = (
     'dpaw_utils.middleware.SSOLoginMiddleware'
 )
 ```
+
+## Audit model mixin and middleware ##
+
+``AuditMixin`` is an extension of ``Django.db.model.Model`` that adds a
+number of additional fields:
+
+ * creator - FK to ``AUTH_USER_MODEL``, used to record the object
+   creator
+ * modifier - FK to ``AUTH_USER_MODEL``, used to record who the object
+   was last modified by
+ * created - a timestamp that is set on initial object save
+ * modified - an auto-updating timestamp (on each object save)
+
+``AuditMiddleware`` is a middleware that will process any request for an
+object having a ``creator` or ``modifier`` field, and automatically set those
+to the request user via a ``pre_save`` signal.
