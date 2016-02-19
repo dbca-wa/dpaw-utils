@@ -41,5 +41,5 @@ number of additional fields:
  * modified - an auto-updating timestamp (on each object save)
 
 ``AuditMiddleware`` is a middleware that will process any request for an
-object having a ``creator` or ``modifier`` field, and automatically set those
+object having a ``creator`` or ``modifier`` field, and automatically set those
 to the request user via a ``pre_save`` signal.
