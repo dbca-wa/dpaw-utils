@@ -2,6 +2,8 @@ from django import http
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
+from django.db.models import signals
+from django.utils.functional import curry
 
 
 class SSOLoginMiddleware(object):
@@ -19,7 +21,7 @@ class SSOLoginMiddleware(object):
 
             for key, value in attributemap.iteritems():
                 attributemap[key] = request.META[value]
-            
+
             if hasattr(settings, "ALLOWED_EMAIL_SUFFIXES") and settings.ALLOWED_EMAIL_SUFFIXES:
                 allowed = settings.ALLOWED_EMAIL_SUFFIXES
                 if isinstance(settings.ALLOWED_EMAIL_SUFFIXES, basestring):
@@ -38,3 +40,27 @@ class SSOLoginMiddleware(object):
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
 
+
+class AuditMiddleware(object):
+    """Adds creator and modifier foreign key refs to any model automatically.
+    Ref: https://gist.github.com/mindlace/3918300
+    """
+    def process_request(self, request):
+        if request.method not in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
+            if hasattr(request, 'user') and request.user.is_authenticated():
+                user = request.user
+            else:
+                user = None
+
+            set_auditfields = curry(self.set_auditfields, user)
+            signals.pre_save.connect(set_auditfields, dispatch_uid=(self.__class__, request,), weak=False)
+
+    def process_response(self, request, response):
+        signals.pre_save.disconnect(dispatch_uid=(self.__class__, request,))
+        return response
+
+    def set_auditfields(self, user, sender, instance, **kwargs):
+        if not getattr(instance, 'creator_id', None):
+            instance.creator = user
+        if hasattr(instance, 'modifier_id'):
+            instance.modifier = user

@@ -86,32 +86,3 @@ class AuditMixin(models.Model):
             if getattr(self, field) != value:
                 self._changed_data.append(field)
         return self._changed_data
-
-    def save(self, *args, **kwargs):
-        """Attempts to determine the current user automatically.
-        """
-        User = get_user_model()
-        _locals = threading.local()
-
-        if ((not hasattr(_locals, 'request') or _locals.request.user.is_anonymous())):
-            if hasattr(_locals, 'user'):
-                user = _locals.user
-            else:
-                try:
-                    user = User.objects.get(pk=_locals.request.user.pk)
-                except:
-                    user = None
-                _locals.user = user
-        else:
-            try:
-                user = User.objects.get(pk=_locals.request.user.pk)
-            except:
-                    user = None
-
-        # If saving a new model, set the creator.
-        if not self.pk:
-            self.creator = user
-
-        self.modifier = user
-
-        super(AuditMixin, self).save(*args, **kwargs)
