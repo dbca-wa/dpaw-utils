@@ -1,6 +1,10 @@
 from __future__ import unicode_literals
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils import timezone
+import threading
 
 
 class ActiveMixinManager(models.Manager):
@@ -38,3 +42,76 @@ class ActiveMixin(models.Model):
         """
         self.effective_to = timezone.now()
         super(ActiveMixin, self).save(*args, **kwargs)
+
+
+class AuditMixin(models.Model):
+    """Model mixin to update creation/modification datestamp and user
+    automatically on save.
+    """
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, blank=True, null=True,
+        related_name='%(app_label)s_%(class)s_created',
+        editable=False)
+    modifier = models.ForeignKey(
+        settings.AUTH_USER_MODEL, blank=True, null=True,
+        related_name='%(app_label)s_%(class)s_modified',
+        editable=False)
+    created = models.DateTimeField(default=timezone.now, editable=False)
+    modified = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, *args, **kwargs):
+        super(AuditMixin, self).__init__(*args, **kwargs)
+        self._initial = {}
+        if self.pk:
+            for field in self._meta.fields:
+                self._initial[field.attname] = getattr(self, field.attname)
+
+    def has_changed(self):
+        """Returns True if the current data object differs from saved.
+        """
+        return bool(self.changed_data)
+
+    @property
+    def changed_data(self):
+        """Returns a list of fields with data that differs from initial
+        values. May be utilised by revision mechanisms, as required.
+        """
+        self._changed_data = []
+        for field, value in self._initial.items():
+            if field in ["modified", "modifier_id"]:
+                continue  # Disregard modifer field as a test for changed data.
+            if getattr(self, field) != value:
+                self._changed_data.append(field)
+        return self._changed_data
+
+    def save(self, *args, **kwargs):
+        """Attempts to determine the current user automatically.
+        """
+        User = get_user_model()
+        _locals = threading.local()
+
+        if ((not hasattr(_locals, 'request') or _locals.request.user.is_anonymous())):
+            if hasattr(_locals, 'user'):
+                user = _locals.user
+            else:
+                try:
+                    user = User.objects.get(pk=_locals.request.user.pk)
+                except:
+                    user = None
+                _locals.user = user
+        else:
+            try:
+                user = User.objects.get(pk=_locals.request.user.pk)
+            except:
+                    user = None
+
+        # If saving a new model, set the creator.
+        if not self.pk:
+            self.creator = user
+
+        self.modifier = user
+
+        super(AuditMixin, self).save(*args, **kwargs)
