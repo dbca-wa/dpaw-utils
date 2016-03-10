@@ -3,13 +3,26 @@
 A bundle of several Python and Django utilities used by many department
 applications.
 
-As a convenience function use in requirements for django, bottle, uwsgi, redis and psycopg2 (postgresql) projects.
+This package installs the following dependencies (not version-pinned, include
+explicit versions in requirement.txt above this if required:
+
+ * Django
+ * Requests
+ * Bottle
+ * django-confy
+ * iPython
+ * django-extensions
+ * gevent
+ * django-uwsgi
+ * django-redis
+ * psycopg2
 
 Future plans:
 
- * Include example uwsgi.ini file and supervisor configs for running
  * Include sample settings file for django to load a lot of stuff from env (uses django-confy)
  * Anything else repurposable across a lot of projects that changes a small amount (backend/util lib focused stuff, no ui components like templates/stylesheets and no data models)
+
+# Django functionality #
 
 ## SSO Login Middleware ##
 
@@ -28,6 +41,37 @@ MIDDLEWARE_CLASSES = (
 )
 ```
 
+## Setting environment variables via django-confy ##
+
+To set environment variables using django-confy, modify the project `manage.py` as follows:
+
+    #!/usr/bin/env python
+    import confy
+    import os
+    import sys
+
+    confy.read_environment_file()
+
+    if __name__ == "__main__":
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project_dir.settings")
+        from django.core.management import execute_from_command_line
+        execute_from_command_line(sys.argv)
+
+Modify the project `wsgi.py` as follows:
+
+    import confy
+    from django.core.wsgi import get_wsgi_application
+    import os
+
+    confy.read_environment_file('.env')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project_dir.settings")
+
+Include a `.env` file in the root of your project containing required variables
+(should be gitignored):
+
+    DATABASE_URL="postgis://USER:PASSWORD@HOST:PORT/DATABASE_NAME"
+    SECRET_KEY="ThisIsASecretKey"
+
 ## Audit model mixin and middleware ##
 
 ``AuditMixin`` is an extension of ``Django.db.model.Model`` that adds a
@@ -43,3 +87,27 @@ number of additional fields:
 ``AuditMiddleware`` is a middleware that will process any request for an
 object having a ``creator`` or ``modifier`` field, and automatically set those
 to the request user via a ``pre_save`` signal.
+
+# uWSGI configuration #
+
+An example uWSGI configuration (assumes that the virtualenv dir is called `venv`,
+and that it is present in the project directory):
+
+    [uwsgi]
+    # Django-related settings
+    chdir           = /var/www/PROJECT_DIR/
+    home            = %(chdir)venv
+    module          = PROJECT.wsgi
+    # Process-related settings
+    auto-procname   = true
+    hook-pre-app    = exec:venv/bin/python manage.py collectstatic --noinput
+    static-map      = /static=%(chdir)static
+    static-map      = /media=%(chdir)media
+    static-cache-paths = 30
+    http            = :PORT_NUMBER
+    die-on-term     = true
+    # Required to be in the app config file for %n to work
+    procname-prefix = %n/
+    touch-reload    = %d%n.ini
+    stats           = /var/spool/uwsgi/sockets/stats_%n.sock
+    logto           = /var/log/uwsgi/%n.log
