@@ -29,7 +29,7 @@ class SSOLoginMiddleware(object):
                 if not any([attributemap["email"].lower().endswith(x) for x in allowed]):
                     return http.HttpResponseForbidden()
 
-            if User.objects.filter(email__istartswith=attributemap["email"]).exists():
+            if attributemap["email"] and User.objects.filter(email__istartswith=attributemap["email"]).exists():
                 user = User.objects.get(email__istartswith=attributemap["email"])
             elif User.objects.filter(username__iexact=attributemap["username"]).exists():
                 user = User.objects.get(username__iexact=attributemap["username"])
