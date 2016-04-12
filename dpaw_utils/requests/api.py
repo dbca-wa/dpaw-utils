@@ -3,7 +3,7 @@ import os
 
 session_key_header = "X_SESSION_KEY"
 http_session_key_header = "HTTP_{}".format(session_key_header)
-sso_cookie_name = os.environ.get("SSO_COOKIE_NAME","_dpaw_wa_gov_au_sessionid")
+sso_cookie_name = os.environ.get("SSO_COOKIE_NAME") or "_dpaw_wa_gov_au_sessionid"
 debug = (os.environ.get("DEBUG_SSO") or "false").lower() in ["true","yes","t","y","on"]
 
 if debug:
