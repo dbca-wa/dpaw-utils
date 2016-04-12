@@ -1,7 +1,13 @@
 import requests
+import os
 
 session_key_header = "X_SESSION_KEY"
-http_session_key_header = "HTTP_" + session_key_header
+http_session_key_header = "HTTP_{}".format(session_key_header)
+sso_cookie_name = os.environ.get("SSO_COOKIE_NAME") or "_dpaw_wa_gov_au_sessionid"
+debug = (os.environ.get("DEBUG_SSO") or "false").lower() in ["true","yes","t","y","on"]
+
+if debug:
+    request_seq = 0
 
 def _set_session_key(user_request,kwargs):
     """
@@ -18,21 +24,30 @@ def _set_session_key(user_request,kwargs):
             session_key = user_request.get_header(session_key_header,user_request.get_header(http_session_key_header,None))
         elif request_name[0:7] == "django.":
             session_key = user_request.META.get(http_session_key_header,user_request.META.get(session_key_header,None))
+        else:
+            session_key = user_request.META.get(http_session_key_header,user_request.META.get(session_key_header,None))
     except:
         pass
 
     if not session_key:
-        #Try to use the default way to retrieve the session key
+        #Try to use the current session id
         try:
-            session_key = user_request.META.get(http_session_key_header,user_request.META.get(session_key_header,None))
+            session_key = user_request.session.session_key
         except:
             pass
-
     if session_key:
         cookies = kwargs.get("cookies",{})
-        cookies["_dpaw_wa_gov_au_sessionid"] = session_key
+        cookies[sso_cookie_name] = session_key
         kwargs["cookies"] = cookies
 
+    if debug:
+        global request_seq
+        request_seq += 1
+        try:
+            request_path = user_request.path
+        except:
+            request_path = ""
+        print "{}-{}: {}\n\t{}".format(os.getpid(),request_seq,request_path,"\n\t".join(["{}={}".format(k,v) for k,v in kwargs.iteritems()]))
     return 
 
 def options(user_request,url, **kwargs):
