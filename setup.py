@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='dpaw-utils',
-      version='0.3a8',
+      version='0.3a9',
       description='Utilities for Django/Python apps',
       url='https://bitbucket.org/dpaw/dpaw-utils',
       author='Department of Parks and Wildlife',
