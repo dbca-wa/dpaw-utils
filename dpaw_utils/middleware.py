@@ -1,13 +1,14 @@
 from django import http
 from django.conf import settings
-from django.contrib.auth import login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth import login, logout, get_user_model
 from django.db.models import signals
 from django.utils.functional import curry
 
 
 class SSOLoginMiddleware(object):
+
     def process_request(self, request):
+        User = get_user_model()
         if request.path.startswith('/logout') and "HTTP_X_LOGOUT_URL" in request.META:
             logout(request)
             return http.HttpResponseRedirect(request.META["HTTP_X_LOGOUT_URL"])
