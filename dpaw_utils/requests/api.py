@@ -1,5 +1,6 @@
 import requests
 import os
+import six
 
 session_key_header = "X_SESSION_KEY"
 http_session_key_header = "HTTP_{}".format(session_key_header)
@@ -7,7 +8,6 @@ sso_cookie_name = os.environ.get("SSO_COOKIE_NAME") or "_dpaw_wa_gov_au_sessioni
 debug = (os.environ.get("DEBUG_SSO") or "false").lower() in ["true","yes","t","y","on"]
 
 if debug:
-    import StringIO
     import json as json_lib
     request_seq = 0
 
@@ -66,7 +66,7 @@ def log(user_request,url,method,data = None,json = None,kwargs=None):
 
     if json:
         #pretty print
-        json_out = StringIO.StringIO()
+        json_out = six.StringIO()
         try:
             json_lib.dump(json,json_out,indent=4)
             json_str = "\n".join([" " * 12 + line for line in json_out.getvalue().split("\n")])
@@ -75,7 +75,7 @@ def log(user_request,url,method,data = None,json = None,kwargs=None):
         
         log_msg += "{}body(json):\n{}\n".format(' ' * 8,json_str)
 
-    print log_msg
+    print(log_msg)
 
 
 def options(user_request,url, **kwargs):
