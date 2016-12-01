@@ -9,7 +9,7 @@ class SSOLoginMiddleware(object):
 
     def process_request(self, request):
         User = get_user_model()
-        if request.path.startswith('/logout') and "HTTP_X_LOGOUT_URL" in request.META:
+        if request.path.startswith('/ledger/logout') and "HTTP_X_LOGOUT_URL" in request.META:
             logout(request)
             return http.HttpResponseRedirect(request.META["HTTP_X_LOGOUT_URL"])
         if not request.user.is_authenticated() and "HTTP_REMOTE_USER" in request.META:
@@ -32,8 +32,8 @@ class SSOLoginMiddleware(object):
 
             if attributemap["email"] and User.objects.filter(email__istartswith=attributemap["email"]).exists():
                 user = User.objects.get(email__istartswith=attributemap["email"])
-            elif User.objects.filter(username__iexact=attributemap["username"]).exists():
-                user = User.objects.get(username__iexact=attributemap["username"])
+            #elif User.objects.filter(username__iexact=attributemap["username"]).exists():
+            #    user = User.objects.get(username__iexact=attributemap["username"])
             else:
                 user = User()
             user.__dict__.update(attributemap)
