@@ -9,10 +9,11 @@ class SSOLoginMiddleware(object):
 
     def process_request(self, request):
         User = get_user_model()
-        if request.path.startswith('/ledger/logout') and "HTTP_X_LOGOUT_URL" in request.META:
+        if (request.path.startswith('/logout') or request.path.startswith('/ledger/logout')) \
+                    and "HTTP_X_LOGOUT_URL" in request.META and request.META["HTTP_X_LOGOUT_URL"]:
             logout(request)
             return http.HttpResponseRedirect(request.META["HTTP_X_LOGOUT_URL"])
-        if not request.user.is_authenticated() and "HTTP_REMOTE_USER" in request.META:
+        if not request.user.is_authenticated() and "HTTP_REMOTE_USER" in request.META and request.META["HTTP_REMOTE_USER"]:
             attributemap = {
                 "username": "HTTP_REMOTE_USER",
                 "last_name": "HTTP_X_LAST_NAME",
@@ -20,7 +21,7 @@ class SSOLoginMiddleware(object):
                 "email": "HTTP_X_EMAIL",
             }
 
-            for key, value in attributemap.iteritems():
+            for key, value in attributemap.items():
                 attributemap[key] = request.META[value]
 
             if hasattr(settings, "ALLOWED_EMAIL_SUFFIXES") and settings.ALLOWED_EMAIL_SUFFIXES:
@@ -32,8 +33,8 @@ class SSOLoginMiddleware(object):
 
             if attributemap["email"] and User.objects.filter(email__istartswith=attributemap["email"]).exists():
                 user = User.objects.get(email__istartswith=attributemap["email"])
-            #elif User.objects.filter(username__iexact=attributemap["username"]).exists():
-            #    user = User.objects.get(username__iexact=attributemap["username"])
+            elif (User.__name__ != "EmailUser") and User.objects.filter(username__iexact=attributemap["username"]).exists():
+                user = User.objects.get(username__iexact=attributemap["username"])
             else:
                 user = User()
             user.__dict__.update(attributemap)
