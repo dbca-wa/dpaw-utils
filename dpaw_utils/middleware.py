@@ -31,10 +31,10 @@ class SSOLoginMiddleware(object):
                 if not any([attributemap["email"].lower().endswith(x) for x in allowed]):
                     return http.HttpResponseForbidden()
 
-            if attributemap["email"] and User.objects.filter(email__istartswith=attributemap["email"]).exists():
-                user = User.objects.get(email__istartswith=attributemap["email"])
+            if attributemap["email"] and User.objects.filter(email__iexact=attributemap["email"]).exists():
+                user = User.objects.filter(email__iexact=attributemap["email"])[0]
             elif (User.__name__ != "EmailUser") and User.objects.filter(username__iexact=attributemap["username"]).exists():
-                user = User.objects.get(username__iexact=attributemap["username"])
+                user = User.objects.filter(username__iexact=attributemap["username"])[0]
             else:
                 user = User()
             user.__dict__.update(attributemap)
