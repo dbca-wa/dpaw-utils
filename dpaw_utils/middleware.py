@@ -2,10 +2,11 @@ from django import http
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.db.models import signals
+from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import curry
 
 
-class SSOLoginMiddleware(object):
+class SSOLoginMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         User = get_user_model()
@@ -43,7 +44,7 @@ class SSOLoginMiddleware(object):
             login(request, user)
 
 
-class AuditMiddleware(object):
+class AuditMiddleware(MiddlewareMixin):
     """Adds creator and modifier foreign key refs to any model automatically.
     Ref: https://gist.github.com/mindlace/3918300
     """
