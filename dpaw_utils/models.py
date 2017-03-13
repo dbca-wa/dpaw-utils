@@ -40,8 +40,12 @@ class ActiveMixin(models.Model):
         """Overide the standard delete method; sets effective_to the current
         date and time.
         """
-        self.effective_to = timezone.now()
-        super(ActiveMixin, self).save(*args, **kwargs)
+        if 'force' in kwargs and kwargs['force']:
+            kwargs.pop('force', None)
+            super(ActiveMixin, self).delete(*args, **kwargs)
+        else:
+            self.effective_to = timezone.now()
+            super(ActiveMixin, self).save(*args, **kwargs)
 
 
 class AuditMixin(models.Model):
