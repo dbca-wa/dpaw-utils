@@ -1,4 +1,4 @@
-from django import http
+from django import http, VERSION
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.db.models import signals
@@ -14,7 +14,11 @@ class SSOLoginMiddleware(MiddlewareMixin):
                     and "HTTP_X_LOGOUT_URL" in request.META and request.META["HTTP_X_LOGOUT_URL"]:
             logout(request)
             return http.HttpResponseRedirect(request.META["HTTP_X_LOGOUT_URL"])
-        if not request.user.is_authenticated() and "HTTP_REMOTE_USER" in request.META and request.META["HTTP_REMOTE_USER"]:
+        if VERSION < (2, 0):
+            user_auth = request.user.is_authenticated()
+        else:
+            user_auth = request.user.is_authenticated
+        if user_auth and "HTTP_REMOTE_USER" in request.META and request.META["HTTP_REMOTE_USER"]:
             attributemap = {
                 "username": "HTTP_REMOTE_USER",
                 "last_name": "HTTP_X_LAST_NAME",
