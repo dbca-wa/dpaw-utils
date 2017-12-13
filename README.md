@@ -87,27 +87,3 @@ number of additional fields:
 ``AuditMiddleware`` is a middleware that will process any request for an
 object having a ``creator`` or ``modifier`` field, and automatically set those
 to the request user via a ``pre_save`` signal.
-
-# uWSGI configuration #
-
-An example uWSGI configuration (assumes that the virtualenv dir is called `venv`,
-and that it is present in the project directory):
-
-    [uwsgi]
-    # Django-related settings
-    chdir           = /var/www/PROJECT_DIR/
-    home            = %(chdir)venv
-    module          = PROJECT.wsgi
-    # Process-related settings
-    auto-procname   = true
-    hook-pre-app    = exec:venv/bin/python manage.py collectstatic --noinput
-    static-map      = /static=%(chdir)static
-    static-map      = /media=%(chdir)media
-    static-cache-paths = 30
-    http            = :PORT_NUMBER
-    die-on-term     = true
-    # Required to be in the app config file for %n to work
-    procname-prefix = %n/
-    touch-reload    = %d%n.ini
-    stats           = /var/spool/uwsgi/sockets/stats_%n.sock
-    logto           = /var/log/uwsgi/%n.log
