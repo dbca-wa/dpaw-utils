@@ -54,10 +54,17 @@ class AuditMiddleware(MiddlewareMixin):
     """
     def process_request(self, request):
         if request.method not in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
-            if hasattr(request, 'user') and request.user.is_authenticated():
-                user = request.user
-            else:
-                user = None
+            if hasattr(request, 'user'):
+                if VERSION < (2, 0):
+                    if request.user.is_authenticated():
+                        user = request.user
+                    else:
+                        user = None
+                else:
+                    if request.user.is_authenticated:
+                        user = request.user
+                    else:
+                        user = None
 
             set_auditfields = curry(self.set_auditfields, user)
             signals.pre_save.connect(set_auditfields, dispatch_uid=(self.__class__, request,), weak=False)
