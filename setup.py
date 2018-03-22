@@ -8,7 +8,4 @@ setup(name='dpaw-utils',
       author_email='asi@dbca.wa.gov.au',
       license='BSD',
       packages=['dpaw_utils', 'dpaw_utils.requests'],
-      install_requires=[
-          'django', 'requests', 'bottle', 'django-confy', 'ipython', 'six',
-          'django-extensions', 'gevent', 'django-uwsgi', 'django-redis', 'psycopg2'],
       zip_safe=False)
