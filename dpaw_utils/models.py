@@ -53,13 +53,11 @@ class AuditMixin(models.Model):
     automatically on save.
     """
     creator = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True,
-        related_name='%(app_label)s_%(class)s_created',
-        editable=False)
+        settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.PROTECT,
+        related_name='%(app_label)s_%(class)s_created', editable=False)
     modifier = models.ForeignKey(
-        settings.AUTH_USER_MODEL, blank=True, null=True,
-        related_name='%(app_label)s_%(class)s_modified',
-        editable=False)
+        settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.PROTECT,
+        related_name='%(app_label)s_%(class)s_modified', editable=False)
     created = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
 
