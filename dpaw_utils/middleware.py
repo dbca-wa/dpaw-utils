@@ -30,7 +30,8 @@ class SSOLoginMiddleware(MiddlewareMixin):
             }
 
             for key, value in attributemap.items():
-                attributemap[key] = request.META[value]
+                if value in request.META:
+                    attributemap[key] = request.META[value]
 
             if hasattr(settings, 'ALLOWED_EMAIL_SUFFIXES') and settings.ALLOWED_EMAIL_SUFFIXES:
                 allowed = settings.ALLOWED_EMAIL_SUFFIXES
